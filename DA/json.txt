@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-04-27 13:43:33",
+  "room_id": 2,
+  "mq7": "157",
+  "mq135": "131",
+  "temp": "24.3",
+  "hum": "52.0",
+  "ky028_analog": "171",
+  "ky028_digital": "1",
+  "ens160_iaq": 26,
+  "ens160_tvoc": 74,
+  "ens160_eCO2": 164,
+  "aht21_temp": "24.3",
+  "aht21_rh": "52.1",
+  "bmp280_outdoor_temp": "4.2",
+  "bmp280_pressure": "997.0",
+  "bmp280_altitude": "81.6"
+}
