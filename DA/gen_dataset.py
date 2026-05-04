@@ -6,7 +6,7 @@ import random
 # 1. Константы и параметры
 start_date = datetime(2026, 4, 27, 0, 0, 0)
 end_date = datetime(2027, 4, 27, 23, 0, 0)  # примерно 1 год
-delta = timedelta(minutes=30)              # 1 запись в 30 минут
+delta = timedelta(minutes=5)              # 1 запись в 30 минут
 
 NUM_ROOMS = 10                             # 10 помещений
 df_rows = []
