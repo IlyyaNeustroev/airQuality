@@ -4,7 +4,7 @@
 CREATE TABLE IF NOT EXISTS sensor.data (
     id SERIAL PRIMARY KEY,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    room_number INTEGER NOT NULL,
+    room_id INTEGER NOT NULL,
     date DATE NOT NULL,
     time TIME NOT NULL,
     season INTEGER NOT NULL,
