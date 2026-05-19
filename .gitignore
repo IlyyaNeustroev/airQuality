@@ -205,10 +205,3 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-
-# Ignore model files
-ML/*.pkl
-SINGLE_PROJECT/ML/*.pkl
-
-# Ignore CSV data files
-DA/*.csv
