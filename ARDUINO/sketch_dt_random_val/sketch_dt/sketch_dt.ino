@@ -100,7 +100,7 @@ void fake_sensors() {
 
   // === Отправка JSON на сервер ===
   if (!client.connect(SERVER_IP, SERVER_PORT)) {
-    Serial.println("❌ Не удалось подключиться к серверу");
+    Serial.println("Не удалось подключиться к серверу");
     return;
   }
 
@@ -123,7 +123,7 @@ void fake_sensors() {
   }
 
   client.stop();
-  Serial.println("✅ Отправлено\n");
+  Serial.println("Отправлено\n");
 }
 
 
@@ -187,10 +187,10 @@ void read_sensors() {
   // BMP‑280 (настроим Wire с нужными пинами)
   Wire.begin(BMP_SDA_PIN, BMP_SCL_PIN);        // D12, D13
   if (!bmp.begin()) {
-    Serial.println("❌ BMP280 не найден!");
+    Serial.println("BMP280 не найден!");
     // можно выставить fake‑значения, если BMP280 не подключён
   } else {
-    Serial.println("✅ BMP280 подключён");
+    Serial.println("BMP280 подключён");
   }
 
   float bmpTemp = bmp.readTemperature();
@@ -214,7 +214,7 @@ void setup() {
   Serial.begin(115200);
 
   // Wi‑Fi
-  Serial.print("🚀 Подключение к Wi‑Fi: ");
+  Serial.print("Подключение к Wi‑Fi: ");
   Serial.println(WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   while (WiFi.status() != WL_CONNECTED) {
@@ -222,7 +222,7 @@ void setup() {
     Serial.print(".");
   }
   Serial.println("");
-  Serial.print("✅ IP адрес ESP32: ");
+  Serial.print("IP адрес ESP32: ");
   Serial.println(WiFi.localIP());
 
   // Настройка NTP‑времени
@@ -238,14 +238,14 @@ void setup() {
   // Настройка генератора случайных чисел
   setup_random();
 
-  Serial.println("✅ Режим генерации данных активирован");
+  Serial.println("Режим генерации данных активирован");
 }
 
 
 // === Loop ===
 void loop() {
   delay(300000);   // каждые 5 минут
-  Serial.println("📤 Генерация данных...");
+  Serial.println("енерация данных...");
   fake_sensors();
   // Раскомментировать, когда датчики заработают:
   // read_sensors();
