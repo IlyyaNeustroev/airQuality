@@ -23,7 +23,9 @@ CREATE TABLE IF NOT EXISTS sensor.data (
     ens_iaq INTEGER,
     ens_tvoc INTEGER,
     ens_co2 INTEGER,
-    packet_count INTEGER NOT NULL
+    packet_count INTEGER NOT NULL,
+    iaq_class INTEGER,
+    iaq_proba JSONB
 );
 
 -- Индексы для ускорения запросов

@@ -2,7 +2,7 @@ import { Row, Col } from "antd";
 import MLModelCard from "./MLModelCard";
 import ModelSettings from "./ModelSettings";
 
-import { MlSettings } from "../../api";
+import type { MlSettings } from "../../api";
 
 interface Props {
   mlSettings: MlSettings;

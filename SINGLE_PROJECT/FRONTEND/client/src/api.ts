@@ -79,7 +79,7 @@ export interface MonitoringData {
 }
 
 // Настройки системы и ML
-interface MlSettings {
+export interface MlSettings {
   enabled: boolean;
   auto_retrain: boolean;
   forecast_horizon_hours: number;

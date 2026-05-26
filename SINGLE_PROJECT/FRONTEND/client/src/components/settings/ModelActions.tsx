@@ -1,5 +1,5 @@
 import { Row, Col, Button } from "antd";
-import { MlSettings } from "../../api";
+import type { MlSettings } from "../../api";
 
 interface Props {
   mlSettings: MlSettings;

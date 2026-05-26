@@ -2,7 +2,7 @@ import { Card, Typography } from "antd";
 import SettingSwitch from "./SettingSwitch";
 import SettingSlider from "./SettingSlider";
 
-import { MlSettings } from "../../api";
+import type{ MlSettings } from "../../api";
 
 const { Title } = Typography;
 

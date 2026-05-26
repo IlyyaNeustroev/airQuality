@@ -1,5 +1,6 @@
 // src/components/control/ZoneSettings.tsx
 import { Card, Slider, Button, Space } from "antd";
+import { useState } from "react";
 import { updateControlState } from "../../api";
 
 interface Props {

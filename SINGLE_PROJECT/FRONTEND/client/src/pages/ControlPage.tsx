@@ -1,5 +1,6 @@
 // src/pages/ControlPage.tsx
 import { Row, Col, Card } from "antd";
+import { useState, useEffect } from "react"; 
 import GlobalControls from "../components/control/GlobalControls";
 import ZoneCard from "../components/control/ZoneCard";
 import ZoneSettings from "../components/control/ZoneSettings";

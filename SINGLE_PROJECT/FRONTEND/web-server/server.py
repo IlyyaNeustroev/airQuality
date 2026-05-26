@@ -1,6 +1,7 @@
 import sys
 import os
 import json  #Для JSON в БД!
+from datetime import datetime, timedelta  # <-- ДОБАВИТЬ timedelta
 
 # Настройка путей
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -840,18 +841,26 @@ def get_monitoring_data():
                 return "offline"
             v = float(v or 0)
             if v >= 4:
-                critical += 1
+                #critical += 1
                 return "critical"
             if v >= 2:
-                warning += 1
+                #warning += 1
                 return "warning"
-            online += 1
+            #online += 1
             return "online"
 
         sensors = []
         for r in rows:
             iaq = r['avg_iaq']
             status = classify_iaq(iaq)
+            
+            # Обновляем счётчики здесь
+            if status == "online":
+                online += 1
+            elif status == "warning":
+                warning += 1
+            elif status == "critical":
+                critical += 1
 
             sensors.append({
                 "id": f"S-{r['room_id']}",

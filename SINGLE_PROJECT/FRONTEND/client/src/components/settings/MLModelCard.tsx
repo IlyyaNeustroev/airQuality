@@ -3,7 +3,7 @@ import ModelInfoCards from "./ModelInfoCards";
 import ModelFeatures from "./ModelFeatures";
 import ModelActions from "./ModelActions";
 
-import { ModelInfo, MlSettings } from "../../api";
+import type { ModelInfo, MlSettings } from "../../api";
 
 const { Title, Text } = Typography;
 

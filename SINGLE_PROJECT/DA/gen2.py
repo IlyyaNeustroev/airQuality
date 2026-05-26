@@ -167,7 +167,7 @@ while current <= end_date:
             season, weekday, hour, room_id
         )
         
-        # Формируем строку для CSV в формате вашей БД
+        # Формируем строку для CSV в формате  БД
         row = [
             row_data['date'], row_data['weekday'], row_data['season'], row_data['time'],
             row_data['room_id'], row_data['mq7'], row_data['mq135'],
@@ -182,7 +182,7 @@ while current <= end_date:
     
     current += delta
 
-# 4. Сохраняем в формате вашей БД
+# 4. Сохраняем в формате БД
 columns = [
     "date", "weekday", "season", "time", "room_id",
     "mq7", "mq135", "temp", "hum", 
@@ -196,8 +196,8 @@ columns = [
 df = pd.DataFrame(df_rows, columns=columns)
 df.to_csv("air_quality_training_dataset_2.csv", index=False, float_format="%.1f")
 
-print(f"✅ Датасет сгенерирован: {len(df):,} записей")
-print("\n📊 Статистика:")
+print(f"Датасет сгенерирован: {len(df):,} записей")
+print("\nСтатистика:")
 print(df[['mq7', 'temp', 'ens_co2', 'iaq_class']].describe())
 print(f"\n🔧 Сбои датчиков (-1):")
 print((df == -1).sum())
