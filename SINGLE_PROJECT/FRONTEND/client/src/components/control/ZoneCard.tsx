@@ -1,3 +1,4 @@
+// src/components/control/ZoneCard.tsx
 import { Card, Progress, Tag } from "antd";
 
 export interface Zone {
@@ -8,18 +9,18 @@ export interface Zone {
   status: "on" | "off" | "auto";
 }
 
-const getStatus = (status: Zone["status"]) => {
-  switch (status) {
-    case "on":
-      return <Tag color="green">ВКЛ</Tag>;
-    case "off":
-      return <Tag>ВЫКЛ</Tag>;
-    case "auto":
-      return <Tag color="cyan">АВТО</Tag>;
-  }
-};
-
 const ZoneCard: React.FC<{ zone: Zone }> = ({ zone }) => {
+  const getStatus = (status: Zone["status"]) => {
+    switch (status) {
+      case "on":
+        return <Tag color="green">ВКЛ</Tag>;
+      case "off":
+        return <Tag>ВЫКЛ</Tag>;
+      case "auto":
+        return <Tag color="cyan">АВТО</Tag>;
+    }
+  };
+
   return (
     <Card size="small" className="custom-card">
       <div style={{ display: "flex", justifyContent: "space-between" }}>

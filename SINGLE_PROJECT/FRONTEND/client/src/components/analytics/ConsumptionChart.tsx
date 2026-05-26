@@ -1,28 +1,32 @@
 import { Card } from "antd";
+import { fetchAnalyticsData } from "../../api";
 
-const bars = [20, 40, 60, 80, 52, 70, 88, 92, 65, 58, 74, 50];
+export default async function ConsumptionChart() {
+  try {
+    const data = await fetchAnalyticsData();
 
-const ConsumptionChart = () => {
-  return (
-    <Card
-      className="neon-card"
-      title={
-        <span style={{ color: "#00eaff" }}>Потребление по часам — сегодня</span>
-      }
-    >
-      <div className="bars-chart">
-        {bars.map((height, index) => (
-          <div
-            key={index}
-            className="chart-bar"
-            style={{
-              height: `${height}%`,
-            }}
-          />
-        ))}
-      </div>
-    </Card>
-  );
-};
-
-export default ConsumptionChart;
+    return (
+      <Card
+        className="neon-card"
+        title={
+          <span style={{ color: "#00eaff" }}>
+            Потребление по часам — сегодня
+          </span>
+        }
+      >
+        <div className="bars-chart">
+          {data.hourly_consumption.map((height, index) => (
+            <div
+              key={index}
+              className="chart-bar"
+              style={{ height: `${height}%` }}
+            />
+          ))}
+        </div>
+      </Card>
+    );
+  } catch (error) {
+    console.error("Ошибка загрузки графика потребления:", error);
+    return <Card className="neon-card">Загрузка графика...</Card>;
+  }
+}

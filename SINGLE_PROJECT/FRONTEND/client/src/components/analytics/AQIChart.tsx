@@ -1,44 +1,55 @@
+
 import { Card } from "antd";
+import { fetchAnalyticsData } from "../../api";
 
-const points = [30, 50, 70, 35, 90, 110, 85];
+// SVG-точки и отрезки по данным
+export default async function AQIChart() {
+  try {
+    const data = await fetchAnalyticsData();
 
-const AQIChart = () => {
-  return (
-    <Card
-      className="neon-card"
-      title={<span style={{ color: "#00eaff" }}>Средний AQI — неделя</span>}
-    >
-      <div className="line-chart">
-        {points.map((p, i) => (
-          <div
-            key={i}
-            className="line-point"
-            style={{
-              left: `${i * 15}%`,
-              bottom: `${p}px`,
-            }}
-          />
-        ))}
+    const points = data.weekly_aqi;
 
-        <svg className="line-svg">
-          <polyline
-            fill="none"
-            stroke="#00ffaa"
-            strokeWidth="3"
-            points="
-              0,120
-              60,90
-              120,70
-              180,120
-              240,40
-              300,20
-              360,50
-            "
-          />
-        </svg>
-      </div>
-    </Card>
-  );
-};
+    // Генерация точек и линии SVG
+    const polylinePoints = points.map((p, i) => {
+      const x = i * 60;
+      const y = 120 - p;
+      return `${x},${y}`;
+    }).join(" ");
 
-export default AQIChart;
+    return (
+      <Card
+        className="neon-card"
+        title={
+          <span style={{ color: "#00eaff" }}>
+            Средний AQI — неделя
+          </span>
+        }
+      >
+        <div className="line-chart">
+          {points.map((p, i) => (
+            <div
+              key={i}
+              className="line-point"
+              style={{
+                left: `${i * 15}%`,
+                bottom: `${p}px`,
+              }}
+            />
+          ))}
+
+          <svg className="line-svg">
+            <polyline
+              fill="none"
+              stroke="#00ffaa"
+              strokeWidth="3"
+              points={polylinePoints}
+            />
+          </svg>
+        </div>
+      </Card>
+    );
+  } catch (error) {
+    console.error("Ошибка загрузки AQI-графика:", error);
+    return <Card className="neon-card">Загрузка графика...</Card>;
+  }
+}

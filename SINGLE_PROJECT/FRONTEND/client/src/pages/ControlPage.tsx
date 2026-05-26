@@ -1,25 +1,38 @@
+// src/pages/ControlPage.tsx
 import { Row, Col, Card } from "antd";
 import GlobalControls from "../components/control/GlobalControls";
 import ZoneCard from "../components/control/ZoneCard";
 import ZoneSettings from "../components/control/ZoneSettings";
+import { fetchControlState } from "../api";
 import type { Zone } from "../components/control/ZoneCard";
 
-const zones: Zone[] = [
-  { id: "1", name: "Конференц-зал", power: 85, temp: 25.1, status: "on" },
-  { id: "2", name: "Открытый офис", power: 68, temp: 23.4, status: "auto" },
-  { id: "3", name: "Серверная", power: 100, temp: 19.2, status: "on" },
-  { id: "4", name: "Приёмная", power: 30, temp: 22.1, status: "auto" },
-  { id: "5", name: "Лаборатория", power: 70, temp: 22.8, status: "on" },
-  { id: "6", name: "Столовая", power: 50, temp: 23.7, status: "auto" },
-];
+// export default async function ControlPage() {
+//   const data = await fetchControlState();
+//   const zones: Zone[] = data.zones;
 
-const ControlPage = () => {
+export default function ControlPage() {
+  // используем хуки в реальном времени
+  const [zones, setZones] = useState<Zone[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchControlState().then(data => {
+      setZones(data.zones);
+      setLoading(false);
+    }).catch(e => {
+      console.error("Ошибка /api/control:", e);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) return <div>Загрузка управления...</div>;
+
   return (
     <Card
       title={<span style={{ color: "#00eaff" }}>Управление вентиляцией</span>}
       className="custom-card"
     >
-      <GlobalControls />
+      <GlobalControls updateZones={(newZones) => setZones(newZones)} />
 
       <Row gutter={16} style={{ marginTop: 16 }}>
         <Col span={16}>
@@ -33,11 +46,9 @@ const ControlPage = () => {
         </Col>
 
         <Col span={8}>
-          <ZoneSettings />
+          <ZoneSettings updateZones={(newZones) => setZones(newZones)} />
         </Col>
       </Row>
     </Card>
   );
-};
-
-export default ControlPage;
+}

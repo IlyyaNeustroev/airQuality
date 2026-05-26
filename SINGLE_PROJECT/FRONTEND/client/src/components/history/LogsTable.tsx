@@ -1,43 +1,17 @@
+// src/components/history/LogsTable.tsx
 import { Table, Tag } from "antd";
+import { fetchLogs } from "../../api";
+import { useEffect, useState } from "react";
 
 interface Log {
   id: string;
   time: string;
-  type: string;
+  type: "alert" | "action" | "system" | "ml";
   sensor: string;
   room: string;
   message: string;
   value?: string;
 }
-
-const data: Log[] = [
-  {
-    id: "1",
-    time: "14:23:11",
-    type: "alert",
-    sensor: "S-04",
-    room: "Приёмная",
-    message: "Влажность превысила порог",
-    value: "68%",
-  },
-  {
-    id: "2",
-    time: "13:55:02",
-    type: "alert",
-    sensor: "S-06",
-    room: "Конференц-зал",
-    message: "CO2 превышен",
-    value: "898 ppm",
-  },
-  {
-    id: "3",
-    time: "13:40:00",
-    type: "action",
-    sensor: "SYS",
-    room: "Конференц-зал",
-    message: "Включена вентиляция",
-  },
-];
 
 const getTypeTag = (type: string) => {
   switch (type) {
@@ -89,8 +63,40 @@ const columns = [
 ];
 
 const LogsTable = () => {
+  const [logs, setLogs] = useState<Log[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchLogs({
+      from: "2026-05-20",
+      to: "2026-05-26",
+      type: "all",
+      level: "all",
+      limit: 1000
+    })
+      .then(response => {
+        setLogs(response.logs);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("Ошибка загрузки логов:", error);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div>Загрузка истории событий...</div>;
+
   return (
-    <Table columns={columns} dataSource={data} rowKey="id" pagination={false} />
+    <Table
+      columns={columns}
+      dataSource={logs}
+      rowKey="id"
+      pagination={{
+        pageSize: 30,
+        showSizeChanger: true,
+        showQuickJumper: true,
+      }}
+    />
   );
 };
 

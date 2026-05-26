@@ -1,4 +1,17 @@
+// src/components/monitoring/SensorsTable.tsx
 import { Table, Tag } from "antd";
+import { fetchMonitoringData } from "../../api";
+import { useEffect, useState } from "react";
+
+interface Sensor {
+  id: string;
+  room: string;
+  co2: number;
+  temp: number;
+  hum: number;
+  aqi: number;
+  status: "online" | "warning" | "critical";
+}
 
 const columns = [
   {
@@ -14,17 +27,17 @@ const columns = [
   {
     title: "CO2",
     dataIndex: "co2",
-    render: (v: string) => <div style={{ color: "white" }}>{v}</div>,
+    render: (v: number) => <div style={{ color: "white" }}>{v}</div>,
   },
   {
     title: "Темп",
     dataIndex: "temp",
-    render: (v: string) => <div style={{ color: "white" }}>{v}</div>,
+    render: (v: number) => <div style={{ color: "white" }}>{v.toFixed(1)}</div>,
   },
   {
     title: "Влажность",
     dataIndex: "hum",
-    render: (v: string) => <div style={{ color: "white" }}>{v}</div>,
+    render: (v: number) => <div style={{ color: "white" }}>{v.toFixed(1)}</div>,
   },
   {
     title: "AQI",
@@ -35,13 +48,35 @@ const columns = [
   },
 ];
 
-const data = [
-  { id: "S-01", room: "Зал", co2: 412, temp: 22, hum: 54, aqi: 94 },
-  { id: "S-02", room: "Гостиная", co2: 580, temp: 23, hum: 62, aqi: 78 },
-];
-
 const SensorsTable = () => {
-  return <Table columns={columns} dataSource={data} rowKey="id" />;
+  const [sensors, setSensors] = useState<Sensor[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchMonitoringData()
+      .then(data => {
+        setSensors(data.sensors);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("Ошибка загрузки данных датчиков:", error);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div>Загрузка таблицы датчиков...</div>;
+
+  return (
+    <Table
+      columns={columns}
+      dataSource={sensors}
+      rowKey="id"
+      pagination={{
+        pageSize: 20,
+        showSizeChanger: true,
+      }}
+    />
+  );
 };
 
 export default SensorsTable;

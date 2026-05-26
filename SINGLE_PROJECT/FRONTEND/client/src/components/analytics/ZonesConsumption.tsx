@@ -1,23 +1,36 @@
+// src/components/analytics/ZonesConsumption.tsx
 import { Card } from "antd";
 import ZoneProgress from "./ZoneProgress";
+import { fetchAnalyticsData } from "../../api";
 
-const ZonesConsumption = () => {
-  return (
-    <Card
-      className="neon-card"
-      title={<span style={{ color: "#00eaff" }}>Потребление по зонам</span>}
-    >
-      <ZoneProgress label="Серверная" percent={32} color="#00eaff" />
+export default async function ZonesConsumption() {
+  try {
+    const data = await fetchAnalyticsData();
 
-      <ZoneProgress label="Открытый офис" percent={28} color="#00ffaa" />
-
-      <ZoneProgress label="Конференц-зал" percent={18} color="#ffaa00" />
-
-      <ZoneProgress label="Лаборатория" percent={12} color="#2f6bff" />
-
-      <ZoneProgress label="Остальные" percent={10} color="#1d7a85" />
-    </Card>
-  );
-};
-
-export default ZonesConsumption;
+    return (
+      <Card
+        className="neon-card"
+        title={
+          <span style={{ color: "#00eaff" }}>
+            Потребление по зонам
+          </span>
+        }
+      >
+        {data.zones.map((z, i) => (
+          <ZoneProgress
+            key={i}
+            label={z.label}
+            percent={z.percent}
+            color={[
+              "#00eaff", "#00ffaa",
+              "#ffaa00", "#2f6bff", "#1d7a85"
+            ][i % 5]}
+          />
+        ))}
+      </Card>
+    );
+  } catch (error) {
+    console.error("Ошибка загрузки потребления по зонам:", error);
+    return <Card className="neon-card">Загрузка...</Card>;
+  }
+}
