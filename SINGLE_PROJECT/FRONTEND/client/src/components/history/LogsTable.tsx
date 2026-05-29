@@ -68,8 +68,8 @@ const LogsTable = () => {
 
   useEffect(() => {
     fetchLogs({
-      from: "2026-05-20",
-      to: "2026-05-26",
+      //from: "2026-05-20",
+      //to: "2026-05-26",
       type: "all",
       level: "all",
       limit: 1000

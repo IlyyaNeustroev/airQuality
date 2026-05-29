@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000";
+const API_URL = "http://192.168.0.27:5000";
 
 interface AnalyticsData {
   today_kwh: number;

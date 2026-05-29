@@ -321,7 +321,7 @@ def health_check():
     return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
 
 # Новый эндпоинт для реального времени
-@app.route('/api/dashboard/realtime', methods=['GET'])
+'''@app.route('/api/dashboard/realtime', methods=['GET'])
 def get_realtime_data():
     """
     Возвращает последние данные сенсоров, статус по этажам и события.
@@ -348,14 +348,14 @@ def get_realtime_data():
         conn.close()
 
         # 2. Структура для фронта
-        floor_names = {1: "Цоколь", 2: "Этаж 1", 3: "Этаж 2", 4: "Этаж 3", 5: "Этаж 4"}
+        #floor_names = {1: "Цоколь", 2: "Этаж 1", 3: "Этаж 2", 4: "Этаж 3", 5: "Этаж 4"}
         sensors = {}
         floors = []
         for r in rows:
             key = f"room_{r['room_id']}"
             sensors[key] = dict(r)
-            floor_name = floor_names.get(r['room_id'], f"Этаж {r['room_id']}")
-            value = max(0, min(100, (r['iaq_class'] or 0) * 20))  # IAQ -> 0-100
+            floor_name =f"Помещение {r['room_id']}" # floor_names.get(r['room_id'], f"Помещение {r['room_id']}")
+            value = r['iaq_class'] #max(0, min(100, (r['iaq_class'] or 0) ))  # IAQ -> 0-100
             floors.append({"name": floor_name, "value": value})
 
         # 3. События (пример, можно адаптировать)
@@ -373,7 +373,65 @@ def get_realtime_data():
 
     except Exception as e:
         print(f"Ошибка /api/dashboard/realtime: {e}")
+        return jsonify({"error": "server_error"}), 500'''
+
+# Новый эндпоинт для реального времени
+@app.route('/api/dashboard/realtime', methods=['GET'])
+def get_realtime_data():
+    """
+    Возвращает последние данные сенсоров, статус по этажам и события.
+    Ответ: JSON с ключами "sensors", "floors_status", "events".
+    """
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "database_error"}), 501
+
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+        # 1. Последние значения для каждой комнаты + имя из sensor.rooms
+        cursor.execute("""
+            SELECT d.room_id, r.name_room as name, d.temp, d.hum, d.mq7, d.mq135, 
+                   d.bmp_temp, d.aht21_temp, d.aht21_hum, d.ens_iaq, d.ens_tvoc, 
+                   d.ens_co2, d.pressure, d.iaq_class, d.packet_count
+            FROM sensor.data d
+            INNER JOIN sensor.rooms r ON r.room_id = d.room_id
+            WHERE d.id IN (
+                SELECT MAX(id) FROM sensor.data GROUP BY room_id
+            )
+        """)
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        # 2. Структура для фронта
+        sensors = {}
+        floors = []
+        for r in rows:
+            key = f"room_{r['room_id']}"
+            sensors[key] = dict(r)
+            # Вместо "Помещение 1" — реальное название из БД
+            room_name = r['name'] or f"Помещение {r['room_id']}"
+            value = r['iaq_class']  # IAQ -> 0-100
+            floors.append({"name": room_name, "value": value})
+
+        # 3. События (пример, можно адаптировать)
+        events = [
+            {"time": "14:23", "text": "Высокая влажность", "type": "warning"},
+            {"time": "13:55", "text": "VOC превышен", "type": "error"},
+            {"time": "12:10", "text": "Датчик восстановлен", "type": "success"},
+        ]
+
+        return jsonify({
+            "sensors": sensors,
+            "floors_status": floors,
+            "events": events
+        })
+
+    except Exception as e:
+        print(f"Ошибка /api/dashboard/realtime: {e}")
         return jsonify({"error": "server_error"}), 500
+
 
 #эндпоинт для страницы аналитики
 @app.route('/api/analytics', methods=['GET'])
@@ -513,7 +571,7 @@ def get_analytics_data():
         return jsonify({"error": "server_error"}), 500
 
 #эндпоинт для страниц управления
-@app.route('/api/control', methods=['GET'])
+'''@app.route('/api/control', methods=['GET'])
 def get_control_state():
     """
     Возвращает состояние всех зон (каждый room_id как "зона").
@@ -585,8 +643,73 @@ def get_control_state():
 
     except Exception as e:
         print(f"Ошибка /api/control: {e}")
-        return jsonify({"error": "server_error"}), 500
+        return jsonify({"error": "server_error"}), 500'''
 
+# эндпоинт для страниц управления
+@app.route('/api/control', methods=['GET'])
+def get_control_state():
+    """
+    Возвращает состояние всех зон (каждый room_id как "зона").
+    Формат:
+    {
+        "zones": [
+            {"id": "1", "name": "...", "power": 85, "temp": 22.4, "status": "on|off|auto"}
+        ],
+        "global_mode": "auto|manual"
+    }
+    """
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "database_error"}), 501
+
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Последнее показание по каждой комнате + имя из sensor.rooms
+        cursor.execute("""
+            SELECT
+                d.room_id,
+                r.name_room as name,
+                d.aht21_temp as temp,
+                d.packet_count % 100 as power,
+                CASE
+                    WHEN d.iaq_class >= 3 THEN 'on'
+                    WHEN d.iaq_class = 2 THEN 'auto'
+                    ELSE 'off'
+                END as status
+            FROM sensor.data d
+            INNER JOIN sensor.rooms r ON r.room_id = d.room_id
+            WHERE d.id IN (
+                SELECT MAX(id) FROM sensor.data GROUP BY room_id
+            )
+        """)
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        zones = []
+        for r in rows:
+            id = str(r['room_id'])
+            zones.append({
+                "id": id,
+                "name": r['name'] or f"Комната {id}",
+                "power": int(r['power'] or 70),
+                "temp": float(r['temp'] or 22.0),
+                "status": r['status'] or 'auto',
+            })
+
+        # Пример глобального режима
+        global_mode = "auto"
+
+        return jsonify({
+            "global_mode": global_mode,
+            "zones": zones
+        })
+
+    except Exception as e:
+        print(f"Ошибка /api/control: {e}")
+        return jsonify({"error": "server_error"}), 500
+    
 #Второй эндпоинт для старницы управления
 @app.route('/api/control', methods=['PUT', 'POST'])
 def update_control_state():
@@ -648,6 +771,7 @@ def update_control_state():
     # ответ: просто текущее состояние (чтобы фронт обновился)
     return get_control_state()
 
+'''
 #эндпоинт для страницы логов
 @app.route('/api/logs', methods=['GET'])
 def get_logs():
@@ -783,6 +907,180 @@ def get_logs():
     finally:
         cursor.close()
         conn.close()    
+'''
+# эндпоинт для страницы логов
+@app.route('/api/logs', methods=['GET'])
+def get_logs():
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "database_error"}), 501
+
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    try:
+        from_dt = request.args.get('from') or (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+        to_dt   = request.args.get('to') or datetime.now().strftime('%Y-%m-%d')
+        log_type = request.args.get('type') or 'all'
+        level    = request.args.get('level') or 'all'
+        limit    = int(request.args.get('limit') or 1000)
+
+        where_parts = []
+        params = [from_dt, to_dt]
+
+        if log_type != 'all':
+            where_parts.append("log_type = %s")
+            params.append(log_type)
+
+        if level != 'all':
+            where_parts.append("log_level = %s")
+            params.append(level)
+
+        where_clause = " AND ".join(where_parts) if where_parts else ""
+
+        # ВАЖНО: %% вместо % в тексте SQL (экранирование для psycopg2)
+        if where_clause:
+            query = f"""
+                WITH raw_logs AS (
+                    SELECT
+                        id,
+                        to_char(created_at, 'HH24:MI:SS') as time_,
+                        to_char(created_at::date, 'YYYY-MM-DD') as date_,
+                        room_id,
+                        case
+                            when category = 'alert' then 'alert'
+                            when category = 'warning' then 'alert'
+                            when iaq_class is not null then 'ml'
+                            else 'system'
+                        end as log_type,
+                        case
+                            when iaq_class >= 4 then 'Critical'
+                            when iaq_class >= 3 then 'Warning'
+                            else 'Info'
+                        end as log_level,
+                        'S-' || room_id::text as sensor,
+                        room_id::text as room,
+                        case
+                            when category = 'alert' and ens_co2 > 1000 then 'CO2 превышен'
+                            when category = 'alert' and hum > 70 then 'Влажность превысила порог'
+                            when iaq_class is not null then 'ML IAQ=' || iaq_class::text
+                            else 'Системное событие'
+                        end as message,
+                        case
+                            when ens_co2 > 0 then ens_co2::text || '%%' || 'ppm'
+                            when hum > 0 then hum::text || '%%'
+                            else null
+                        end as value_text
+                    FROM (
+                        SELECT
+                            id,
+                            created_at,
+                            room_id,
+                            temp, hum, ens_iaq, ens_tvoc, ens_co2,
+                            iaq_class,
+                            case
+                                when iaq_class >= 4 then 'alert'
+                                when iaq_class = 3 then 'warning'
+                                else 'info'
+                            end as category
+                        FROM sensor.data
+                        WHERE date BETWEEN %s AND %s
+                    ) inner_src
+                )
+                SELECT * FROM raw_logs WHERE {where_clause}
+                ORDER BY id DESC LIMIT %s
+            """
+        else:
+            query = """
+                WITH raw_logs AS (
+                    SELECT
+                        id,
+                        to_char(created_at, 'HH24:MI:SS') as time_,
+                        to_char(created_at::date, 'YYYY-MM-DD') as date_,
+                        room_id,
+                        case
+                            when category = 'alert' then 'alert'
+                            when category = 'warning' then 'alert'
+                            when iaq_class is not null then 'ml'
+                            else 'system'
+                        end as log_type,
+                        case
+                            when iaq_class >= 4 then 'Critical'
+                            when iaq_class >= 3 then 'Warning'
+                            else 'Info'
+                        end as log_level,
+                        'S-' || room_id::text as sensor,
+                        room_id::text as room,
+                        case
+                            when category = 'alert' and ens_co2 > 1000 then 'CO2 превышен'
+                            when category = 'alert' and hum > 70 then 'Влажность превысила порог'
+                            when iaq_class is not null then 'ML IAQ=' || iaq_class::text
+                            else 'Системное событие'
+                        end as message,
+                        case
+                            when ens_co2 > 0 then ens_co2::text || '%%' || 'ppm'
+                            when hum > 0 then hum::text || '%%'
+                            else null
+                        end as value_text
+                    FROM (
+                        SELECT
+                            id,
+                            created_at,
+                            room_id,
+                            temp, hum, ens_iaq, ens_tvoc, ens_co2,
+                            iaq_class,
+                            case
+                                when iaq_class >= 4 then 'alert'
+                                when iaq_class = 3 then 'warning'
+                                else 'info'
+                            end as category
+                        FROM sensor.data
+                        WHERE date BETWEEN %s AND %s
+                    ) inner_src
+                )
+                SELECT * FROM raw_logs
+                ORDER BY id DESC LIMIT %s
+            """
+
+        params.append(limit)
+
+        print(f"QUERY: {query}")
+        print(f"PARAMS: {params}")
+        print(f"PARAMS COUNT: {len(params)}, PLACEHOLDERS in query: {query.count('%s')}")  
+        cursor.execute(query, tuple(params))
+        rows = cursor.fetchall()
+
+        logs = []
+        for r in rows:
+            logs.append({
+                "id": str(r['id']),
+                "time": r['date_'] + " " + r['time_'],
+                "type": r['log_type'],
+                "sensor": r['sensor'],
+                "room": r['room'],
+                "message": r['message'],
+                "value": r['value_text'],
+            })
+
+        return jsonify({
+            "logs": logs,
+            "from": from_dt,
+            "to": to_dt,
+            "filter": {
+                "type": log_type,
+                "level": level
+            }
+        })
+
+    except Exception as e:
+        print(f"Ошибка /api/logs: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "server_error"}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
 
 #Эндпоинт для страницы мониторинга
 @app.route('/api/monitoring', methods=['GET'])
@@ -868,7 +1166,7 @@ def get_monitoring_data():
                 "co2": int(r['avg_co2'] or 400),
                 "temp": float(r['avg_temp'] or 22.0),
                 "hum": float(r['avg_hum'] or 50.0),
-                "aqi": max(1, int(iaq or 0) * 25),  # 0..100
+                "aqi": int(iaq or 0),#max(1, int(iaq or 0) * 25),  # 0..100
                 "status": status,
             })
 

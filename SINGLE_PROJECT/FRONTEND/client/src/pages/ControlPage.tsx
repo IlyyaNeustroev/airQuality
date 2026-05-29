@@ -25,7 +25,7 @@ export default function ControlPage() {
       setLoading(false);
     });
   }, []);
-
+  
   if (loading) return <div>Загрузка управления...</div>;
 
   return (
