@@ -17,8 +17,8 @@ print(f"Scaler: {os.path.exists(os.path.join(ml_dir, 'scaler.pkl'))}")
 try:
     from air_quality_ml import AirQualityPredictor
     predictor = AirQualityPredictor(
-        model_path=os.path.join(ml_dir, 'air_quality_model.pkl'),
-        scaler_path=os.path.join(ml_dir, 'scaler.pkl')
+        model_path=os.path.join(ml_dir, 'air_quality_model.pkl')
+        #,scaler_path=os.path.join(ml_dir, 'scaler.pkl')
     )
     print("✅ ML модель загружена!")
 except Exception as e:
